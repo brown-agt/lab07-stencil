@@ -16,28 +16,30 @@ class SingleGoodHistogram:
         return bucket
 
     def add_record(self, price):
-        bucket = self.get_bucket(price)
-        self.buckets[bucket] += 1.0
-        self.total += 1.0
+        """
+        Add a price to the histogram.
+        Increment the frequency of the bucket that contains the price.
+        """
+        bucket = ???
+        # Update the bucket frequencies
+        raise NotImplementedError
 
     def smooth(self, alpha):
-        for key in self.buckets:
-            self.buckets[key] *= (1 - alpha)
-        self.total = sum(self.buckets.values())
+        """
+        Smooth the histogram using the technique described in the handout.
+        """
+        raise NotImplementedError
 
     def update(self, new_hist, alpha):
-        self.smooth(alpha)
-        for key in self.buckets:
-            self.buckets[key] += new_hist.buckets.get(key, 0)
-        self.total = sum(self.buckets.values())
+        """ 
+        Actually updating the histogram with new information: 
+        1. Smooth the current histogram.
+        2. Add the new histogram to the current histogram.
+        """
+        raise NotImplementedError
 
     def sample(self):
-        if self.total == 0:
-            return random.uniform(0, self.max_bucket)
-        r = random.uniform(0, self.total)
-        cumulative = 0.0
-        for key in sorted(self.buckets.keys()):
-            cumulative += self.buckets[key]
-            if r <= cumulative:
-                return key + random.uniform(0, self.bucket_size)
-        return self.max_bucket
+        """ 
+        Return a random sample from the histogram. 
+        """
+        raise NotImplementedError

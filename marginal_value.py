@@ -11,9 +11,8 @@ def calculate_marginal_value(goods, selected_good, valuation_function, bids, pri
     return valuation_with - valuation_without
 
 def calculate_expected_marginal_value(goods, selected_good, valuation_function, bids, price_distribution, num_samples=50):
-    total_mv = 0.0
-    for _ in range(num_samples):
-        sample_prices = price_distribution.sample()
-        mv = calculate_marginal_value(goods, selected_good, valuation_function, bids, sample_prices)
-        total_mv += mv
-    return total_mv / num_samples
+    """
+    Compute the expected marginal value of selected_good:
+    the average of the marginal values over a number of samples.
+    """
+    raise NotImplementedError

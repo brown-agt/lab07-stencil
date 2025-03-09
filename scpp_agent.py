@@ -1,17 +1,17 @@
-import random
 import pickle
 import os
 from agt_server.agents.base_agents.sa_agent import SimultaneousAuctionAgent
 from agt_server.agents.test_agents.sa.truth_bidder.my_agent import TruthfulAgent
+from opp_agent import MysteryAgent
 from independent_histogram import IndependentHistogram
 from localbid import local_bid
-from sample_valuations import additive_valuation
 
 class SCPPAgent(SimultaneousAuctionAgent):
     def setup(self):
         # NOTE: Many internal methods (e.g. self.get_valuations) aren't available during setup.
         # So we delay any setup that requires those until get_action() is called.
         
+        self.mode = 'TRAIN'
         self.simulation_count = 0
         self.NUM_SIMULATIONS_PER_ITERATION = 10
         self.ALPHA = 0.1
@@ -22,14 +22,6 @@ class SCPPAgent(SimultaneousAuctionAgent):
         self.valuation_function = None
         self.learned_distribution = None
         self.curr_distribution = None
-
-    def calculate_valuation(self, bundle):
-        """
-        Internal method to calculate the valuation of a bundle.
-        Here we use an additive valuation based on self.get_valuations().
-        """
-        valuations = self.get_valuations()
-        return additive_valuation(bundle, valuations)
 
     def load_distribution(self):
         """
@@ -74,13 +66,7 @@ class SCPPAgent(SimultaneousAuctionAgent):
         return self.get_bids()
     
     def get_bids(self):
-        bids = local_bid(
-            self.goods,
-            self.valuation_function,
-            self.learned_distribution,
-            num_iterations=self.num_iterations_localbid,
-            num_samples=self.num_samples
-        )
+        bids = ???
         return bids
 
     def update(self):
@@ -91,14 +77,17 @@ class SCPPAgent(SimultaneousAuctionAgent):
         observed_prices = price_history[-1]
         # print(price_history)
         if observed_prices:
-            self.curr_distribution.add_record(observed_prices)
-            self.simulation_count += 1
-
+            # TODO: insert prices into self.curr_distibution
+            # TODO: update simulation_count
+            pass
+            
             if self.simulation_count % self.NUM_SIMULATIONS_PER_ITERATION == 0:
-                self.learned_distribution.update(self.curr_distribution, self.ALPHA)
-                self.curr_distribution = self.learned_distribution.copy()
-                print("Saving learned distribution to disk.")
-                self.save_distribution()
+                # TODO: Update the learned distribution with the newly gathered data
+                # TODO: Reset the current distribution
+                # TODO: Save the learned distribution to disk (for use in live auction mode).
+                # save learned_distribution to disk.
+                pass
+        
 
 ################### SUBMISSION #####################
 agent_submission = SCPPAgent("SCPP Agent")
@@ -120,6 +109,8 @@ if __name__ == "__main__":
                         help='Mode: TRAIN or RUN (default: TRAIN)')
 
     args = parser.parse_args()
+    agent_submission.mode = args.mode
+    print(agent_submission.mode)
 
     if args.join_server:
         agent_submission.connect(ip=args.ip, port=args.port)
@@ -128,6 +119,7 @@ if __name__ == "__main__":
             timeout=1,
             num_goods=3,
             num_rounds=100,
+            kth_price=2,
             valuation_type="randomized",
             players=[
                 agent_submission,
@@ -148,15 +140,16 @@ if __name__ == "__main__":
             timeout=1,
             num_goods=3,
             num_rounds=100,
+            kth_price=2,
             valuation_type="randomized",
             players=[
                 agent_submission,
-                TruthfulAgent("Agent_1"),
-                TruthfulAgent("Agent_2"),
-                TruthfulAgent("Agent_3"),
-                TruthfulAgent("Agent_4"),
-                TruthfulAgent("Agent_5"),
-                TruthfulAgent("Agent_6"),
+                MysteryAgent("Agent_1"),
+                MysteryAgent("Agent_2"),
+                MysteryAgent("Agent_3"),
+                MysteryAgent("Agent_4"),
+                MysteryAgent("Agent_5"),
+                MysteryAgent("Agent_6"),
             ]
         )
         start = time.time()

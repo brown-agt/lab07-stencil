@@ -7,15 +7,7 @@ def local_bid(goods, valuation_function, price_distribution, num_iterations=100,
     """
     Iteratively computes a bid vector by updating bids to be the expected marginal value for each good.
     """
-    bid_vector = {good: 0.0 for good in goods}
-    for _ in range(num_iterations):
-        new_bid_vector = {}
-        #print(bid_vector)
-        for good in goods:
-            mv = calculate_expected_marginal_value(goods, good, valuation_function, bid_vector, price_distribution, num_samples)
-            new_bid_vector[good] = mv
-        bid_vector = new_bid_vector
-    return bid_vector
+    raise NotImplementedError
 
 if __name__ == "__main__":
     def valuation(bundle): 
