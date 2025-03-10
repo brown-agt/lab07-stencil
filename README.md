@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Actually applying MV in auctions TODO: Give a better description
+Welcome to Lab 7: In this lab, you'll upgrade your auction agent by combining price prediction with the optimization method from last week. Your agent will learn to predict opponents' bids through self-play and use these insights to compute expected marginal values, allowing it to adjust bids dynamically over time.
 
 ## Setup and Installation
 
