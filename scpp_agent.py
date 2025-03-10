@@ -2,7 +2,6 @@ import pickle
 import os
 from agt_server.agents.base_agents.sa_agent import SimultaneousAuctionAgent
 from agt_server.agents.test_agents.sa.truth_bidder.my_agent import TruthfulAgent
-from opp_agent import MysteryAgent
 from independent_histogram import IndependentHistogram
 from localbid import expected_local_bid
 import argparse
