@@ -1,18 +1,20 @@
 import random
 
+import random
+
 class SingleGoodHistogram:
-    def __init__(self, bucket_size=5, max_bucket=150):
+    def __init__(self, bucket_size, bid_upper_bound):
         self.bucket_size = bucket_size
-        self.max_bucket = max_bucket
+        self.bid_upper_bound = bid_upper_bound
         self.buckets = {}
-        for b in range(0, max_bucket + 1, bucket_size):
+        for b in range(0, bid_upper_bound, bucket_size):
             self.buckets[b] = 0.0
         self.total = 0.0
 
     def get_bucket(self, price):
         bucket = int(price // self.bucket_size) * self.bucket_size
-        if bucket > self.max_bucket:
-            bucket = self.max_bucket
+        if bucket > self.bid_upper_bound:
+            bucket = self.bid_upper_bound
         return bucket
 
     def add_record(self, price):
@@ -43,3 +45,7 @@ class SingleGoodHistogram:
         Return a random sample from the histogram. 
         """
         raise NotImplementedError
+
+    
+    def __repr__(self):
+        return str(self.buckets)

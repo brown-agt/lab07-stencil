@@ -1,12 +1,12 @@
 from single_good_histogram import SingleGoodHistogram
 
 class IndependentHistogram:
-    def __init__(self, goods, bucket_sizes, max_buckets):
+    def __init__(self, goods, bucket_sizes, max_bids):
         self.bucket_sizes = bucket_sizes
-        self.max_buckets = max_buckets
+        self.max_buckets = max_bids
         self.histograms = {}
-        for good, bucket_size, max_bucket in zip(goods, bucket_sizes, max_buckets):
-            self.histograms[good] = SingleGoodHistogram(bucket_size, max_bucket)
+        for good, bucket_size, max_bid in zip(goods, bucket_sizes, max_bids):
+            self.histograms[good] = SingleGoodHistogram(bucket_size, int(max_bid))
 
     def add_record(self, price_vector):
         for good, price in price_vector.items():
@@ -30,3 +30,6 @@ class IndependentHistogram:
             new_hist.buckets = hist.buckets.copy()
             new_hist.total = hist.total
         return new_ind
+
+    def __repr__(self):
+        return str(self.histograms)

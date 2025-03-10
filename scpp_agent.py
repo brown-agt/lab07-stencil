@@ -4,7 +4,10 @@ from agt_server.agents.base_agents.sa_agent import SimultaneousAuctionAgent
 from agt_server.agents.test_agents.sa.truth_bidder.my_agent import TruthfulAgent
 from opp_agent import MysteryAgent
 from independent_histogram import IndependentHistogram
-from localbid import local_bid
+from localbid import expected_local_bid
+import argparse
+import time
+from agt_server.local_games.sa_arena import SAArena
 
 class SCPPAgent(SimultaneousAuctionAgent):
     def setup(self):
@@ -12,11 +15,15 @@ class SCPPAgent(SimultaneousAuctionAgent):
         # So we delay any setup that requires those until get_action() is called.
         
         self.mode = 'TRAIN'
+        
+        
         self.simulation_count = 0
+        self.NUM_ITERATIONS = 100
         self.NUM_SIMULATIONS_PER_ITERATION = 10
         self.ALPHA = 0.1
-        self.num_iterations_localbid = 100
-        self.num_samples = 50
+        self.NUM_ITERATIONS_LOCALBID = 100
+        self.NUM_SAMPLES = 50
+        self.BUCKET_SIZE = 5
         self.distribution_file = f"learned_distribution_{self.name}.pkl"
 
         self.valuation_function = None
@@ -30,7 +37,7 @@ class SCPPAgent(SimultaneousAuctionAgent):
         if os.path.exists(self.distribution_file):
             with open(self.distribution_file, "rb") as f:
                 self.learned_distribution = pickle.load(f)
-            self.curr_distribution = self.learned_distribution.copy()
+            self.curr_distribution = self.create_independent_histogram()
         else:
             self.initialize_distribution()
 
@@ -40,17 +47,20 @@ class SCPPAgent(SimultaneousAuctionAgent):
         """
         with open(self.distribution_file, "wb") as f:
             pickle.dump(self.learned_distribution, f)
+            
+    def create_independent_histogram(self):
+        return IndependentHistogram(
+            self.goods,
+            bucket_sizes=[self.BUCKET_SIZE for _ in range(len(self.goods))],
+            max_bids=[self.bid_upper_bound for _ in range(len(self.goods))]
+        )
 
     def initialize_distribution(self):
         """
         Initialize the learned distribution using the goods and default parameters.
         We assume bucket sizes of 5 and max values of 100 per good.
         """
-        self.learned_distribution = IndependentHistogram(
-            self.goods,
-            bucket_sizes=[5 for _ in range(len(self.goods))],
-            max_buckets=[100 for _ in range(len(self.goods))]
-        )
+        self.learned_distribution = self.create_independent_histogram()
         self.curr_distribution = self.learned_distribution.copy()
     
     def get_action(self):
@@ -69,14 +79,15 @@ class SCPPAgent(SimultaneousAuctionAgent):
         bids = ???
         return bids
 
-    def update(self):
-        price_history = self.get_price_history()
-        if not price_history:
-            return
-
-        observed_prices = price_history[-1]
-        # print(price_history)
-        if observed_prices:
+    def update(self):        
+        other_bids_raw = self.game_report.game_history['opp_bid_history'][-1]
+        
+        predicted_prices = {}
+        
+        for good in self.goods:
+            predicted_prices[good] = ???
+            
+        if predicted_prices:
             # TODO: insert prices into self.curr_distibution
             # TODO: update simulation_count
             pass
@@ -87,17 +98,13 @@ class SCPPAgent(SimultaneousAuctionAgent):
                 # TODO: Save the learned distribution to disk (for use in live auction mode).
                 # save learned_distribution to disk.
                 pass
-        
+            
 
 ################### SUBMISSION #####################
 agent_submission = SCPPAgent("SCPP Agent")
 ####################################################
 
 if __name__ == "__main__":
-    import argparse
-    import time
-    from agt_server.local_games.sa_arena import SAArena
-
     parser = argparse.ArgumentParser(description='SCPP Agent')
     parser.add_argument('--join_server', action='store_true',
                         help='Connects the agent to the server')
@@ -108,6 +115,10 @@ if __name__ == "__main__":
     parser.add_argument('--mode', type=str, default='TRAIN',
                         help='Mode: TRAIN or RUN (default: TRAIN)')
 
+    parser.add_argument('--num_rounds', type=int, default=100,
+                        help='Number of rounds (default: 100)')
+
+
     args = parser.parse_args()
     agent_submission.mode = args.mode
     print(agent_submission.mode)
@@ -115,21 +126,22 @@ if __name__ == "__main__":
     if args.join_server:
         agent_submission.connect(ip=args.ip, port=args.port)
     elif args.mode == "TRAIN":
+        # TODO: Check for bias
+        VALUE_UPPER_BOUND = 100
+        VALUE_LOWER_BOUND = 0
         arena = SAArena(
             timeout=1,
             num_goods=3,
-            num_rounds=100,
+            num_rounds=args.num_rounds,
             kth_price=2,
-            valuation_type="randomized",
+            valuation_type="complement",
             players=[
                 agent_submission,
                 SCPPAgent("Agent_1"),
                 SCPPAgent("Agent_2"),
                 SCPPAgent("Agent_3"),
-                SCPPAgent("Agent_4"),
-                SCPPAgent("Agent_5"),
-                SCPPAgent("Agent_6"),
-            ]
+            ], 
+            value_range=(VALUE_LOWER_BOUND, VALUE_UPPER_BOUND)
         )
         start = time.time()
         arena.run()
@@ -139,17 +151,13 @@ if __name__ == "__main__":
         arena = SAArena(
             timeout=1,
             num_goods=3,
-            num_rounds=100,
+            num_rounds=500,
             kth_price=2,
-            valuation_type="randomized",
+            valuation_type="complement",
             players=[
                 agent_submission,
-                MysteryAgent("Agent_1"),
-                MysteryAgent("Agent_2"),
-                MysteryAgent("Agent_3"),
-                MysteryAgent("Agent_4"),
-                MysteryAgent("Agent_5"),
-                MysteryAgent("Agent_6"),
+                TruthfulAgent("Agent_1"),
+                TruthfulAgent("Agent_2"),
             ]
         )
         start = time.time()

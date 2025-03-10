@@ -3,7 +3,7 @@ from sample_valuations import additive_valuation, complement_valuation, substitu
 from independent_histogram import IndependentHistogram
 
 
-def local_bid(goods, valuation_function, price_distribution, num_iterations=100, num_samples=50):
+def expected_local_bid(goods, valuation_function, price_distribution, num_iterations=100, num_samples=50):
     """
     Iteratively computes a bid vector by updating bids to be the expected marginal value for each good.
     """
@@ -20,7 +20,7 @@ if __name__ == "__main__":
         else: 
             return 0
     
-    print(local_bid(
+    print(expected_local_bid(
         goods=["a", "b", "c"],
         valuation_function=valuation,
         price_distribution=IndependentHistogram(["a", "b", "c"], 
